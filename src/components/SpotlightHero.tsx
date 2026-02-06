@@ -21,6 +21,12 @@ const SpotlightHero = () => {
   const echoIdRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setEntered(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Smooth cursor tracking
   useEffect(() => {
@@ -259,8 +265,9 @@ const SpotlightHero = () => {
         className="absolute top-8 left-8 z-40 font-display leading-none"
         style={{
           color: nameInverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))",
-          transition: "color 300ms ease",
-          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3}px)`,
+          transition: "color 300ms ease, opacity 800ms ease, transform 800ms ease",
+          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3 + (entered ? 0 : 20)}px)`,
+          opacity: entered ? 1 : 0,
         }}
       >
         <div className="text-4xl md:text-5xl font-semibold tracking-tight">𝓗𝓪𝓼𝓼𝓪𝓷</div>
@@ -274,8 +281,9 @@ const SpotlightHero = () => {
         className="absolute top-10 right-8 z-40 text-sm tracking-widest uppercase font-medium"
         style={{
           color: navInverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))",
-          transition: "color 300ms ease",
-          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3}px)`,
+          transition: "color 300ms ease, opacity 800ms ease 200ms, transform 800ms ease 200ms",
+          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3 + (entered ? 0 : 20)}px)`,
+          opacity: entered ? 1 : 0,
           fontFamily: "var(--font-body)",
         }}
       >
@@ -287,7 +295,9 @@ const SpotlightHero = () => {
         ref={socialElRef}
         className="absolute bottom-8 right-8 z-40 flex gap-5"
         style={{
-          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3}px)`,
+          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3 + (entered ? 0 : 20)}px)`,
+          opacity: entered ? 1 : 0,
+          transition: "opacity 800ms ease 400ms, transform 800ms ease 400ms",
         }}
       >
         <a
