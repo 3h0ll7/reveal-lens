@@ -263,8 +263,8 @@ const SpotlightHero = () => {
           transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3}px)`,
         }}
       >
-        <div className="text-4xl md:text-5xl font-semibold tracking-tight">Hassan</div>
-        <div className="text-4xl md:text-5xl font-semibold tracking-tight">Salman</div>
+        <div className="text-4xl md:text-5xl font-semibold tracking-tight">𝓗𝓪𝓼𝓼𝓪𝓷</div>
+        <div className="text-4xl md:text-5xl font-semibold tracking-tight">𝓼𝓪𝓵𝓶𝓪𝓷</div>
       </div>
 
       {/* Nav - top right */}
