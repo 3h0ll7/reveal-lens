@@ -77,3 +77,18 @@
     transition: color 300ms ease;
   }
 }
+
+@keyframes echoFade {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+.animate-echo {
+  animation: echoFade 0.8s ease-out forwards;
+}
