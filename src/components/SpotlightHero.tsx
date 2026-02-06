@@ -1,333 +1,236 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import portraitMain from "@/assets/portrait-main.png";
 import portraitAlt from "@/assets/portrait-alt.png";
+import SpotlightGrid from "./SpotlightGrid";
+import { useSpotlightCursor } from "@/hooks/useSpotlightCursor";
 
 interface Echo {
   id: number;
   x: number;
   y: number;
-  opacity: number;
+  size: number;
 }
 
-const SPOTLIGHT_RADIUS = 120;
-
 const SpotlightHero = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: -300, y: -300 });
-  const smoothMouse = useRef({ x: -300, y: -300 });
-  const prevMouse = useRef({ x: -300, y: -300 });
+  const { cursor, parallax, smoothRef, velocityRef, baseRadius } = useSpotlightCursor();
+  const [entered, setEntered] = useState(false);
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const echoIdRef = useRef(0);
-  const animFrameRef = useRef<number>(0);
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
-  const [entered, setEntered] = useState(false);
 
+  // Entrance animation
   useEffect(() => {
-    const timer = setTimeout(() => setEntered(true), 100);
+    const timer = setTimeout(() => setEntered(true), 1400); // after loader
     return () => clearTimeout(timer);
-  }, []);
-
-  // Smooth cursor tracking
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-
-      // Parallax
-      const cx = (e.clientX / window.innerWidth - 0.5) * 2;
-      const cy = (e.clientY / window.innerHeight - 0.5) * 2;
-      setParallax({ x: -cx * 8, y: -cy * 8 });
-    };
-
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
   }, []);
 
   // Echo spawning
   useEffect(() => {
     let lastEchoTime = 0;
     const interval = setInterval(() => {
-      const dx = mouseRef.current.x - prevMouse.current.x;
-      const dy = mouseRef.current.y - prevMouse.current.y;
-      const speed = Math.sqrt(dx * dx + dy * dy);
-      prevMouse.current = { ...mouseRef.current };
-
-      if (speed > 15 && Date.now() - lastEchoTime > 60) {
+      const vel = velocityRef.current;
+      if (vel > 8 && Date.now() - lastEchoTime > 50) {
         lastEchoTime = Date.now();
         const id = echoIdRef.current++;
+        const size = baseRadius * 2 * Math.min(vel / 30, 1.2);
         setEchoes((prev) => [
-          ...prev.slice(-8),
-          { id, x: smoothMouse.current.x, y: smoothMouse.current.y, opacity: 0.5 },
+          ...prev.slice(-10),
+          { id, x: smoothRef.current.x, y: smoothRef.current.y, size },
         ]);
-        // Fade out
         setTimeout(() => {
           setEchoes((prev) => prev.filter((e) => e.id !== id));
-        }, 600);
+        }, 800);
       }
     }, 30);
     return () => clearInterval(interval);
-  }, []);
+  }, [velocityRef, smoothRef, baseRadius]);
 
-  // Canvas animation loop for spotlight mask
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Lerp smooth cursor
-    smoothMouse.current.x += (mouseRef.current.x - smoothMouse.current.x) * 0.12;
-    smoothMouse.current.y += (mouseRef.current.y - smoothMouse.current.y) * 0.12;
-
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-
-    // Clear
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw alt image clipped to spotlight circle
-    const img = altImgRef.current;
-    if (img && img.complete) {
-      // Calculate cover dimensions
-      const containerAspect = canvas.width / canvas.height;
-      const imgAspect = img.naturalWidth / img.naturalHeight;
-      let drawW, drawH, drawX, drawY;
-      if (imgAspect > containerAspect) {
-        drawH = canvas.height;
-        drawW = drawH * imgAspect;
-        drawX = (canvas.width - drawW) / 2;
-        drawY = 0;
-      } else {
-        drawW = canvas.width;
-        drawH = drawW / imgAspect;
-        drawX = 0;
-        drawY = (canvas.height - drawH) / 2;
-      }
-
-      // Main spotlight
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(smoothMouse.current.x, smoothMouse.current.y, SPOTLIGHT_RADIUS, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(img, drawX, drawY, drawW, drawH);
-      ctx.restore();
-
-      // Echo spotlights
-      echoes.forEach((echo) => {
-        ctx.save();
-        ctx.globalAlpha = echo.opacity * 0.4;
-        ctx.beginPath();
-        ctx.arc(echo.x, echo.y, SPOTLIGHT_RADIUS * 0.7, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(img, drawX, drawY, drawW, drawH);
-        ctx.restore();
-      });
-    }
-
-    animFrameRef.current = requestAnimationFrame(draw);
-  }, [echoes]);
-
-  const altImgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    // Preload alt image
-    const img = new Image();
-    img.src = portraitAlt;
-    (altImgRef as React.MutableRefObject<HTMLImageElement>).current = img;
-  }, []);
-
-  useEffect(() => {
-    animFrameRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [draw]);
-
-  // Animated grid
-  const gridRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const gridCanvas = gridRef.current;
-    if (!gridCanvas) return;
-    let frame: number;
-
-    const drawGrid = () => {
-      const ctx = gridCanvas.getContext("2d");
-      if (!ctx) return;
-      gridCanvas.width = window.innerWidth;
-      gridCanvas.height = window.innerHeight;
-
-      const spacing = 60;
-      const mx = smoothMouse.current.x;
-      const my = smoothMouse.current.y;
-
-      ctx.strokeStyle = "hsla(0, 0%, 75%, 0.08)";
-      ctx.lineWidth = 0.5;
-
-      for (let x = 0; x < gridCanvas.width; x += spacing) {
-        for (let y = 0; y < gridCanvas.height; y += spacing) {
-          const dx = mx - x;
-          const dy = my - y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const influence = Math.max(0, 1 - dist / 400);
-          const offsetX = dx * influence * 0.03;
-          const offsetY = dy * influence * 0.03;
-
-          ctx.beginPath();
-          ctx.arc(x + offsetX, y + offsetY, 1 + influence * 2, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-      frame = requestAnimationFrame(drawGrid);
-    };
-    frame = requestAnimationFrame(drawGrid);
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  // Text inversion detection
-  const [nameInverted, setNameInverted] = useState(false);
-  const [navInverted, setNavInverted] = useState(false);
-  const [socialInverted, setSocialInverted] = useState(false);
+  // Text inversion
   const nameElRef = useRef<HTMLDivElement>(null);
   const navElRef = useRef<HTMLAnchorElement>(null);
   const socialElRef = useRef<HTMLDivElement>(null);
+  const labelElRef = useRef<HTMLSpanElement>(null);
+  const [nameInverted, setNameInverted] = useState(false);
+  const [navInverted, setNavInverted] = useState(false);
+  const [socialInverted, setSocialInverted] = useState(false);
+  const [labelInverted, setLabelInverted] = useState(false);
 
-  useEffect(() => {
-    const check = () => {
-      const mx = smoothMouse.current.x;
-      const my = smoothMouse.current.y;
-      const r = SPOTLIGHT_RADIUS;
-
-      const checkOverlap = (el: HTMLElement | null) => {
-        if (!el) return false;
-        const rect = el.getBoundingClientRect();
-        const closestX = Math.max(rect.left, Math.min(mx, rect.right));
-        const closestY = Math.max(rect.top, Math.min(my, rect.bottom));
-        const dist = Math.sqrt((mx - closestX) ** 2 + (my - closestY) ** 2);
-        return dist < r;
-      };
-
-      setNameInverted(checkOverlap(nameElRef.current));
-      setNavInverted(checkOverlap(navElRef.current));
-      setSocialInverted(checkOverlap(socialElRef.current));
-    };
-    const interval = setInterval(check, 50);
-    return () => clearInterval(interval);
+  const checkOverlap = useCallback((el: HTMLElement | null, cx: number, cy: number, r: number) => {
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const closestX = Math.max(rect.left, Math.min(cx, rect.right));
+    const closestY = Math.max(rect.top, Math.min(cy, rect.bottom));
+    const dist = Math.sqrt((cx - closestX) ** 2 + (cy - closestY) ** 2);
+    return dist < r;
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      className="relative w-screen h-screen overflow-hidden bg-background cursor-none select-none"
-    >
-      {/* Animated grid */}
-      <canvas ref={gridRef} className="absolute inset-0 z-0 pointer-events-none" />
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const { x, y, radius } = cursor;
+      setNameInverted(checkOverlap(nameElRef.current, x, y, radius));
+      setNavInverted(checkOverlap(navElRef.current, x, y, radius));
+      setSocialInverted(checkOverlap(socialElRef.current, x, y, radius));
+      setLabelInverted(checkOverlap(labelElRef.current, x, y, radius));
+    }, 50);
+    return () => clearInterval(interval);
+  }, [cursor, checkOverlap]);
 
-      {/* Main portrait */}
+  const textColor = (inverted: boolean) =>
+    inverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))";
+
+  const textParallax = (factor: number) => ({
+    transform: `translate(${parallax.x * -factor * 0.15}px, ${parallax.y * -factor * 0.15}px)`,
+  });
+
+  return (
+    <div className="relative w-screen h-screen overflow-hidden bg-background cursor-none select-none">
+      {/* Grid */}
+      <SpotlightGrid mouseRef={smoothRef} />
+
+      {/* Base image (cyborg) */}
       <div
-        className="absolute inset-0 z-10"
+        className="absolute inset-0 z-[1]"
         style={{
-          transform: `translate(${parallax.x}px, ${parallax.y}px)`,
+          transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)`,
           transition: "transform 0.3s ease-out",
         }}
       >
-        <img
-          src={portraitMain}
-          alt="Hassan Salman"
-          className="w-full h-full object-cover"
-        />
+        <img src={portraitMain} alt="Hassan Salman" className="w-full h-full object-cover" />
       </div>
 
-      {/* Alt portrait via canvas spotlight */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 z-20 pointer-events-none"
+      {/* Reveal image (natural) via clip-path */}
+      <div
+        className="absolute inset-0 z-[2]"
         style={{
-          transform: `translate(${parallax.x}px, ${parallax.y}px)`,
+          clipPath: `circle(${cursor.radius}px at ${cursor.x}px ${cursor.y}px)`,
+          transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)`,
           transition: "transform 0.3s ease-out",
         }}
-      />
+      >
+        <img src={portraitAlt} alt="Hassan Salman" className="w-full h-full object-cover" />
+      </div>
 
-      {/* Spotlight cursor visual ring */}
+      {/* Echo rings */}
+      <div className="absolute inset-0 z-[3] pointer-events-none">
+        {echoes.map((echo) => (
+          <div
+            key={echo.id}
+            className="absolute rounded-full border-2 border-white/30 pointer-events-none animate-echo"
+            style={{
+              width: echo.size,
+              height: echo.size,
+              left: echo.x - echo.size / 2,
+              top: echo.y - echo.size / 2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Custom cursor */}
       <div
-        className="fixed z-30 pointer-events-none rounded-full border border-foreground/20"
+        className="fixed z-[10] pointer-events-none rounded-full border-2 border-white/60"
         style={{
-          width: SPOTLIGHT_RADIUS * 2,
-          height: SPOTLIGHT_RADIUS * 2,
-          left: smoothMouse.current.x - SPOTLIGHT_RADIUS,
-          top: smoothMouse.current.y - SPOTLIGHT_RADIUS,
-          transition: "left 0.08s ease-out, top 0.08s ease-out",
+          width: cursor.radius * 2,
+          height: cursor.radius * 2,
+          left: cursor.x,
+          top: cursor.y,
+          transform: "translate(-50%, -50%)",
+          transition: "width 0.3s, height 0.3s",
+          boxShadow: "0 0 30px rgba(255,255,255,0.1), inset 0 0 30px rgba(255,255,255,0.05)",
         }}
-      />
+      >
+        <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+      </div>
 
       {/* Name - top left */}
       <div
         ref={nameElRef}
-        className="absolute top-8 left-8 z-40 font-display leading-none"
+        className="absolute top-12 left-12 z-[6] font-display leading-none"
         style={{
-          color: nameInverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))",
+          color: textColor(nameInverted),
           transition: "color 300ms ease, opacity 800ms ease, transform 800ms ease",
-          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3 + (entered ? 0 : 20)}px)`,
           opacity: entered ? 1 : 0,
+          ...textParallax(1.5),
         }}
       >
-        <div className="text-4xl md:text-5xl font-semibold tracking-tight">𝓗𝓪𝓼𝓼𝓪𝓷</div>
-        <div className="text-4xl md:text-5xl font-semibold tracking-tight">𝓼𝓪𝓵𝓶𝓪𝓷</div>
+        <span className="block text-[clamp(28px,4vw,56px)] font-semibold tracking-tight leading-[1.1]">
+          𝓗𝓪𝓼𝓼𝓪𝓷
+        </span>
+        <span className="block text-[clamp(28px,4vw,56px)] font-semibold tracking-tight leading-[1.1]">
+          𝓼𝓪𝓵𝓶𝓪𝓷
+        </span>
       </div>
 
       {/* Nav - top right */}
       <a
         ref={navElRef}
         href="#"
-        className="absolute top-10 right-8 z-40 text-sm tracking-widest uppercase font-medium"
+        className="absolute top-14 right-12 z-[6] font-display text-[clamp(14px,1.5vw,18px)] tracking-[0.15em] uppercase relative group"
         style={{
-          color: navInverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))",
+          color: textColor(navInverted),
           transition: "color 300ms ease, opacity 800ms ease 200ms, transform 800ms ease 200ms",
-          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3 + (entered ? 0 : 20)}px)`,
           opacity: entered ? 1 : 0,
-          fontFamily: "var(--font-body)",
+          ...textParallax(1.2),
         }}
       >
         F1 Records
+        <span className="absolute bottom-[-4px] left-0 w-0 h-px bg-current transition-all duration-300 group-hover:w-full" />
       </a>
 
       {/* Social icons - bottom right */}
       <div
         ref={socialElRef}
-        className="absolute bottom-8 right-8 z-40 flex gap-5"
+        className="absolute bottom-12 right-12 z-[6] flex gap-6 items-center"
         style={{
-          transform: `translate(${parallax.x * 0.3}px, ${parallax.y * 0.3 + (entered ? 0 : 20)}px)`,
-          opacity: entered ? 1 : 0,
           transition: "opacity 800ms ease 400ms, transform 800ms ease 400ms",
+          opacity: entered ? 1 : 0,
+          ...textParallax(1.2),
         }}
       >
         <a
-          href="https://instagram.com"
+          href="https://instagram.com/hassansalman"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
-          style={{
-            color: socialInverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))",
-            transition: "color 300ms ease",
-          }}
+          className="flex items-center justify-center w-11 h-11 transition-transform duration-300 hover:scale-110"
+          style={{ color: textColor(socialInverted), transition: "color 300ms ease" }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+          <svg width="26" height="26" viewBox="0 0 448 512" fill="currentColor">
+            <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
           </svg>
         </a>
         <a
-          href="https://x.com"
+          href="https://x.com/hassansalman"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="X / Twitter"
+          className="flex items-center justify-center w-11 h-11 transition-transform duration-300 hover:scale-110"
+          style={{ color: textColor(socialInverted), transition: "color 300ms ease" }}
+        >
+          <svg width="26" height="26" viewBox="0 0 512 512" fill="currentColor">
+            <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
+          </svg>
+        </a>
+      </div>
+
+      {/* Bottom left label */}
+      <div
+        className="absolute bottom-12 left-12 z-[6] pointer-events-none"
+        style={{
+          transition: "opacity 800ms ease 600ms, transform 800ms ease 600ms",
+          opacity: entered ? 1 : 0,
+          ...textParallax(1),
+        }}
+      >
+        <span
+          ref={labelElRef}
+          className="font-display text-xs tracking-[0.2em] uppercase"
           style={{
-            color: socialInverted ? "hsl(0,0%,100%)" : "hsl(var(--foreground))",
+            color: labelInverted ? "rgba(255,255,255,0.7)" : "hsl(var(--muted-foreground))",
             transition: "color 300ms ease",
           }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-        </a>
+          Portfolio © 2026
+        </span>
       </div>
     </div>
   );
