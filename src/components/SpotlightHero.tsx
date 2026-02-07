@@ -50,11 +50,9 @@ const SpotlightHero = () => {
   const nameElRef = useRef<HTMLDivElement>(null);
   const navElRef = useRef<HTMLButtonElement>(null);
   const socialElRef = useRef<HTMLDivElement>(null);
-  const labelElRef = useRef<HTMLSpanElement>(null);
   const [nameInverted, setNameInverted] = useState(false);
   const [navInverted, setNavInverted] = useState(false);
   const [socialInverted, setSocialInverted] = useState(false);
-  const [labelInverted, setLabelInverted] = useState(false);
 
   const checkOverlap = useCallback((el: HTMLElement | null, cx: number, cy: number, r: number) => {
     if (!el) return false;
@@ -71,7 +69,6 @@ const SpotlightHero = () => {
       setNameInverted(checkOverlap(nameElRef.current, x, y, radius));
       setNavInverted(checkOverlap(navElRef.current, x, y, radius));
       setSocialInverted(checkOverlap(socialElRef.current, x, y, radius));
-      setLabelInverted(checkOverlap(labelElRef.current, x, y, radius));
     }, 50);
     return () => clearInterval(interval);
   }, [cursor, checkOverlap]);
@@ -207,26 +204,6 @@ const SpotlightHero = () => {
         ))}
       </div>
 
-      {/* Bottom left label */}
-      <div
-        className="absolute bottom-12 left-12 z-[6] pointer-events-none"
-        style={{
-          transition: "opacity 800ms ease 600ms, transform 800ms ease 600ms",
-          opacity: entered ? 1 : 0,
-          ...textParallax(1),
-        }}
-      >
-        <span
-          ref={labelElRef}
-          className="font-display text-xs tracking-[0.2em] uppercase"
-          style={{
-            color: labelInverted ? "rgba(255,255,255,0.7)" : "hsl(var(--muted-foreground))",
-            transition: "color 300ms ease",
-          }}
-        >
-          Portfolio © 2026
-        </span>
-      </div>
     </div>
   );
 };
