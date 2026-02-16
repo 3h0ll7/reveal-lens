@@ -81,7 +81,7 @@ const SpotlightHero = () => {
   });
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-background cursor-none select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-background cursor-none select-none" id="hero">
       {/* Grid */}
       <SpotlightGrid mouseRef={smoothRef} />
 
