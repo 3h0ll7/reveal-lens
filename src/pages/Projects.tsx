@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Stethoscope, Brain, Heart, Sparkles } from "lucide-react";
+import { ArrowLeft, Stethoscope, Brain, Heart, Sparkles, Camera } from "lucide-react";
 import ProjectCard from "@/components/ProjectCard";
-
 const Projects = () => {
   const navigate = useNavigate();
 
@@ -27,7 +26,7 @@ const Projects = () => {
       </div>
 
       {/* Cards */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-8 px-6 pb-20">
+      <div className="flex flex-col md:flex-row flex-wrap items-center justify-center gap-8 px-6 pb-20">
         <ProjectCard
           icon={<Stethoscope size={28} className="text-foreground" />}
           title="Digital Nurse"
@@ -48,6 +47,17 @@ const Projects = () => {
           ctaLabel="Try Kidinnu AI"
           ctaIcon={<Sparkles size={18} />}
           href="https://kidinnu.netlify.app/"
+        />
+
+        <ProjectCard
+          icon={<Camera size={28} className="text-foreground" />}
+          title="ItemValue"
+          subtitle="AI Price Estimator"
+          description="Know how much your used items are worth in seconds. Just take a photo — it identifies the type and condition, then gives you a fair price in Iraqi dinars."
+          tags={["Photo Recognition", "Price Estimation", "Condition Analysis", "Province-Based"]}
+          ctaLabel="Try ItemValue"
+          ctaIcon={<Sparkles size={18} />}
+          href="https://itemvalue.lovable.app/"
         />
       </div>
 
