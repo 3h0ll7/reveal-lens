@@ -2,6 +2,7 @@ import SpotlightHero from "@/components/SpotlightHero";
 import LoadingScreen from "@/components/LoadingScreen";
 import ProjectCard from "@/components/ProjectCard";
 import { Stethoscope, Brain, Camera, Heart, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Index = () => {
   return (
@@ -24,38 +25,48 @@ const Index = () => {
         </div>
 
         <div className="flex flex-col items-center gap-6 md:gap-8 max-w-md mx-auto">
-          <ProjectCard
-            icon={<Stethoscope size={28} className="text-foreground" />}
-            title="Digital Nurse"
-            subtitle="Clinical Reference App"
-            description="Evidence-based nursing procedures, clinical calculators, and professional healthcare resources. Built for healthcare professionals."
-            tags={["Clinical Procedures", "Medical Calculators", "Drug References", "AI Assistant"]}
-            ctaLabel="Explore the App"
-            ctaIcon={<Heart size={18} />}
-            href="https://digital-nurse-buddy.lovable.app/home"
-          />
-
-          <ProjectCard
-            icon={<Brain size={28} className="text-foreground" />}
-            title="Kidinnu AI"
-            subtitle="AI-Powered Assistant"
-            description="Advanced AI assistant powered by cutting-edge language models. Create, explore, and innovate with intelligent conversation."
-            tags={["Smart Conversations", "Creative Writing", "Problem Solving", "Knowledge Base"]}
-            ctaLabel="Try Kidinnu AI"
-            ctaIcon={<Sparkles size={18} />}
-            href="https://kidinnu.netlify.app/"
-          />
-
-          <ProjectCard
-            icon={<Camera size={28} className="text-foreground" />}
-            title="ItemValue"
-            subtitle="AI Price Estimator"
-            description="Know how much your used items are worth in seconds. Just take a photo — it identifies the type and condition, then gives you a fair price in Iraqi dinars."
-            tags={["Photo Recognition", "Price Estimation", "Condition Analysis", "Province-Based"]}
-            ctaLabel="Try ItemValue"
-            ctaIcon={<Sparkles size={18} />}
-            href="https://itemvalue.lovable.app/"
-          />
+          {[
+            {
+              icon: <Stethoscope size={28} className="text-foreground" />,
+              title: "Digital Nurse",
+              subtitle: "Clinical Reference App",
+              description: "Evidence-based nursing procedures, clinical calculators, and professional healthcare resources. Built for healthcare professionals.",
+              tags: ["Clinical Procedures", "Medical Calculators", "Drug References", "AI Assistant"],
+              ctaLabel: "Explore the App",
+              ctaIcon: <Heart size={18} />,
+              href: "https://digital-nurse-buddy.lovable.app/home",
+            },
+            {
+              icon: <Brain size={28} className="text-foreground" />,
+              title: "Kidinnu AI",
+              subtitle: "AI-Powered Assistant",
+              description: "Advanced AI assistant powered by cutting-edge language models. Create, explore, and innovate with intelligent conversation.",
+              tags: ["Smart Conversations", "Creative Writing", "Problem Solving", "Knowledge Base"],
+              ctaLabel: "Try Kidinnu AI",
+              ctaIcon: <Sparkles size={18} />,
+              href: "https://kidinnu.netlify.app/",
+            },
+            {
+              icon: <Camera size={28} className="text-foreground" />,
+              title: "ItemValue",
+              subtitle: "AI Price Estimator",
+              description: "Know how much your used items are worth in seconds. Just take a photo — it identifies the type and condition, then gives you a fair price in Iraqi dinars.",
+              tags: ["Photo Recognition", "Price Estimation", "Condition Analysis", "Province-Based"],
+              ctaLabel: "Try ItemValue",
+              ctaIcon: <Sparkles size={18} />,
+              href: "https://itemvalue.lovable.app/",
+            },
+          ].map((project, i) => (
+            <motion.div
+              key={project.title}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: i * 0.15, ease: "easeOut" }}
+            >
+              <ProjectCard {...project} />
+            </motion.div>
+          ))}
         </div>
       </section>
 
