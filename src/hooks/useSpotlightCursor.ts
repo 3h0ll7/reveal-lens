@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const SPOTLIGHT_RADIUS = 120;
+const SPOTLIGHT_RADIUS = typeof window !== "undefined" && window.innerWidth < 768 ? 60 : 120;
 
 export function useSpotlightCursor() {
   const mouseRef = useRef({ x: -300, y: -300 });

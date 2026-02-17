@@ -18,6 +18,20 @@ const SpotlightHero = () => {
   const [entered, setEntered] = useState(false);
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const echoIdRef = useRef(0);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [heroVisible, setHeroVisible] = useState(true);
+
+  // Stop effects when hero is not visible
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // Entrance animation
   useEffect(() => {
@@ -81,7 +95,7 @@ const SpotlightHero = () => {
   });
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-background cursor-none select-none" id="hero">
+    <div ref={heroRef} className="relative w-screen h-screen overflow-hidden bg-background cursor-none select-none" id="hero">
       {/* Grid */}
       <SpotlightGrid mouseRef={smoothRef} />
 
@@ -109,36 +123,40 @@ const SpotlightHero = () => {
       </div>
 
       {/* Echo rings */}
-      <div className="absolute inset-0 z-[3] pointer-events-none">
-        {echoes.map((echo) => (
-          <div
-            key={echo.id}
-            className="absolute rounded-full border-2 border-white/30 pointer-events-none animate-echo"
-            style={{
-              width: echo.size,
-              height: echo.size,
-              left: echo.x - echo.size / 2,
-              top: echo.y - echo.size / 2,
-            }}
-          />
-        ))}
-      </div>
+      {heroVisible && (
+        <div className="absolute inset-0 z-[3] pointer-events-none">
+          {echoes.map((echo) => (
+            <div
+              key={echo.id}
+              className="absolute rounded-full border-2 border-white/30 pointer-events-none animate-echo"
+              style={{
+                width: echo.size,
+                height: echo.size,
+                left: echo.x - echo.size / 2,
+                top: echo.y - echo.size / 2,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Custom cursor */}
-      <div
-        className="fixed z-[10] pointer-events-none rounded-full border-2 border-white/60"
-        style={{
-          width: cursor.radius * 2,
-          height: cursor.radius * 2,
-          left: cursor.x,
-          top: cursor.y,
-          transform: "translate(-50%, -50%)",
-          transition: "width 0.3s, height 0.3s",
-          boxShadow: "0 0 30px rgba(255,255,255,0.1), inset 0 0 30px rgba(255,255,255,0.05)",
-        }}
-      >
-        <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-      </div>
+      {/* Custom cursor - only in hero */}
+      {heroVisible && (
+        <div
+          className="fixed z-[10] pointer-events-none rounded-full border-2 border-white/60"
+          style={{
+            width: cursor.radius * 2,
+            height: cursor.radius * 2,
+            left: cursor.x,
+            top: cursor.y,
+            transform: "translate(-50%, -50%)",
+            transition: "width 0.3s, height 0.3s",
+            boxShadow: "0 0 30px rgba(255,255,255,0.1), inset 0 0 30px rgba(255,255,255,0.05)",
+          }}
+        >
+          <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+        </div>
+      )}
 
       {/* Name - top left */}
       <div
