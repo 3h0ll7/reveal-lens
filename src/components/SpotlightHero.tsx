@@ -143,7 +143,7 @@ const SpotlightHero = () => {
       {/* Custom cursor - only in hero */}
       {heroVisible && (
         <div
-          className="fixed z-[10] pointer-events-none rounded-full border-2 border-white/60"
+          className="absolute z-[10] pointer-events-none rounded-full border-2 border-white/60"
           style={{
             width: cursor.radius * 2,
             height: cursor.radius * 2,
