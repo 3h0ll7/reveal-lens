@@ -9,8 +9,11 @@ const Index = () => {
       <LoadingScreen />
       <SpotlightHero />
 
+      {/* Spacer between hero and projects */}
+      <div className="h-16 md:h-24 bg-background" />
+
       {/* Projects Section */}
-      <section className="bg-background py-12 md:py-20 px-4 md:px-6">
+      <section className="bg-background pb-12 md:pb-20 px-4 md:px-6">
         <div className="text-center mb-8 md:mb-12">
           <h2 className="font-display text-[clamp(28px,4vw,48px)] font-semibold tracking-tight text-foreground">
             Projects
