@@ -99,29 +99,34 @@ const SpotlightHero = () => {
       {/* Grid */}
       <SpotlightGrid mouseRef={smoothRef} />
 
-      {/* Base image (cyborg) */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)`,
-          transition: "transform 0.3s ease-out",
-        }}
-      >
-        <img src={portraitMain} alt="Hassan Salman" className="w-full h-full object-cover" />
-      </div>
+      <div className="absolute inset-0 z-[1] overflow-hidden">
+        {/* Base image (cyborg) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)`,
+            transition: "transform 0.3s ease-out",
+          }}
+        >
+          <img src={portraitMain} alt="Hassan Salman" className="w-full h-full object-cover" />
+        </div>
 
-      {/* Reveal image (natural) via clip-path — clipped to top 75% only */}
-      <div
-        className="absolute inset-0 z-[2]"
-        style={{
-          clipPath: `circle(${cursor.radius}px at ${cursor.x}px ${cursor.y}px)`,
-          transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)`,
-          transition: "transform 0.3s ease-out",
-          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 78%)",
-          maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 78%)",
-        }}
-      >
-        <img src={portraitAlt} alt="Hassan Salman" className="w-full h-full object-cover" />
+        {/* Reveal image (natural) via clip-path — clipped to top 75% only */}
+        <div
+          className="absolute inset-0 z-[2]"
+          style={{
+            clipPath: `circle(${cursor.radius}px at ${cursor.x}px ${cursor.y}px)`,
+            transform: `translate(${parallax.x}px, ${parallax.y}px) scale(1.05)`,
+            transition: "transform 0.3s ease-out",
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 78%)",
+            maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 78%)",
+          }}
+        >
+          <img src={portraitAlt} alt="Hassan Salman" className="w-full h-full object-cover" />
+        </div>
+
+        {/* Scan overlay bound to hero image container */}
+        <div className="hero-scan-overlay absolute inset-0 z-[3] pointer-events-none" aria-hidden="true" />
       </div>
 
       {/* Echo rings */}
