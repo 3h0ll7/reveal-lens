@@ -16,7 +16,6 @@ export function useSpotlightCursor() {
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     const onTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
       const t = e.touches[0];
       mouseRef.current = { x: t.clientX, y: t.clientY };
     };
@@ -27,7 +26,7 @@ export function useSpotlightCursor() {
     };
 
     window.addEventListener("mousemove", onMove);
-    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchmove", onTouchMove, { passive: true });
     document.addEventListener("touchstart", onTouchStart);
     return () => {
       window.removeEventListener("mousemove", onMove);
