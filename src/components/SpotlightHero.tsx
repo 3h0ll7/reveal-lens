@@ -125,8 +125,15 @@ const SpotlightHero = () => {
           <img src={portraitAlt} alt="Hassan Salman" className="w-full h-full object-cover" />
         </div>
 
-        {/* Scan overlay bound to hero image container */}
-        <div className="hero-scan-overlay absolute inset-0 z-[3] pointer-events-none" aria-hidden="true" />
+        {/* Scan overlay bound to hero image container — masked to top 72% like reveal */}
+        <div
+          className="hero-scan-overlay absolute inset-0 z-[3] pointer-events-none"
+          aria-hidden="true"
+          style={{
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 78%)",
+            maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 78%)",
+          }}
+        />
       </div>
 
       {/* Echo rings */}
